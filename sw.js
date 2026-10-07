@@ -1,6 +1,6 @@
 // Offline support: keeps a copy of the app itself so it opens without signal.
 // Your assignment data comes from Google and is cached by the page, not here.
-const CACHE = "coursework-v1";
+const CACHE = "coursework-v2";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

@@ -504,8 +504,11 @@ function renderCal(){
 /* ---------- Google Apps Script API ---------- */
 async function api(action,payload){
   let r;
-  if(action==="list") r=await fetch(`${CFG.url}?action=list&key=${encodeURIComponent(CFG.key)}`);
-  else r=await fetch(CFG.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:CFG.key,action,...payload})});
+  const ctl=new AbortController(), timer=setTimeout(()=>ctl.abort(),action==="sync"?90000:25000);
+  try{
+    if(action==="list") r=await fetch(`${CFG.url}?action=list&key=${encodeURIComponent(CFG.key)}`,{signal:ctl.signal});
+    else r=await fetch(CFG.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({key:CFG.key,action,...payload}),signal:ctl.signal});
+  }finally{clearTimeout(timer)}
   const j=await r.json();
   if(!j.ok)throw new Error(j.error||"Request failed");
   return j;
