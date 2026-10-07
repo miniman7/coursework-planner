@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Coursework Planner Setup</title>
+<meta name="description" content="Set up your own Coursework Planner: Canvas deadlines, statuses and email reminders, stored in your own Google account.">
+<meta name="theme-color" content="#1a73e8">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single readable column of numbered setup steps, Google-app styling to match the planner. */
+:root{
+  --paper:#f8f9fa; --sheet:#ffffff; --ink:#202124; --muted:#5f6368; --rule:#dadce0; --grid:#f1f3f4;
+  --primary:#1a73e8; --on-primary:#ffffff; --primary-soft:#e8f0fe; --primary-ink:#174ea6;
+  --ok:#188038; --ok-soft:#e6f4ea; --warn:#b06000; --warn-soft:#fef7e0; --late:#d93025;
+  --shadow:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15);
+  --body:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Roboto Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#202124; --sheet:#2d2e31; --ink:#e8eaed; --muted:#9aa0a6; --rule:#3c4043; --grid:#35363a;
+  --primary:#8ab4f8; --on-primary:#202124; --primary-soft:#394457; --primary-ink:#d2e3fc;
+  --ok:#81c995; --ok-soft:#24392b; --warn:#fdd663; --warn-soft:#463d22; --late:#f28b82;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px 1px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#202124; --sheet:#2d2e31; --ink:#e8eaed; --muted:#9aa0a6; --rule:#3c4043; --grid:#35363a;
+  --primary:#8ab4f8; --on-primary:#202124; --primary-soft:#394457; --primary-ink:#d2e3fc;
+  --ok:#81c995; --ok-soft:#24392b; --warn:#fdd663; --warn-soft:#463d22; --late:#f28b82;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px 1px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;padding-top:env(safe-area-inset-top,0px)}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:28px 64px;display:flex;flex-direction:column;gap:18px}
+a{color:var(--primary)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+header{display:flex;gap:16px;align-items:center}
+header img{width:56px;height:56px;border-radius:14px;flex:none}
+h1{font-size:28px;font-weight:400;line-height:1.2;margin:0;text-wrap:balance}
+.lede{color:var(--muted);margin:4px 0 0;max-width:62ch}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fact{background:var(--sheet);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px;font-size:13.5px;color:var(--muted)}
+.fact b{display:block;color:var(--ink);font-size:15px;font-weight:500;margin-bottom:2px}
+@media (max-width:600px){.facts{grid-template-columns:1fr}}
+.note{background:var(--primary-soft);color:var(--primary-ink);border-radius:12px;padding:12px 16px;font-size:14px}
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;counter-reset:step}
+.step{background:var(--sheet);border-radius:12px;box-shadow:var(--shadow);padding:18px 20px 18px 66px;position:relative;counter-increment:step;min-width:0}
+.step::before{content:counter(step);position:absolute;left:18px;top:16px;width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:500;font-size:15px}
+@media (max-width:480px){.step{padding:52px 16px 16px}.step::before{left:16px;top:14px}}
+.step h2{font-size:18px;font-weight:500;margin:2px 0 6px;text-wrap:balance}
+.step p,.step ul{margin:6px 0}
+.step ul{padding-left:20px}
+.step li{margin:3px 0}
+.where{color:var(--muted);font-size:13px;font-weight:500;letter-spacing:.02em}
+kbd{font-family:var(--mono);font-size:12.5px;background:var(--grid);border:1px solid var(--rule);border-bottom-width:2px;border-radius:5px;padding:0 5px}
+code{font-family:var(--mono);font-size:13px;background:var(--grid);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.ui{font-weight:500;white-space:nowrap}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{border:1px solid var(--rule);background:var(--sheet);color:var(--primary);border-radius:999px;padding:9px 18px;font:inherit;font-weight:500;font-size:14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.btn:disabled{opacity:.5;cursor:default}
+.msg{font-size:14px;padding:8px 12px;border-radius:8px;background:var(--ok-soft);color:var(--ok);margin-top:10px}
+.msg.err{background:#fce8e6;color:#d93025}
+.warn{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:10px 12px;font-size:14px;margin-top:10px}
+.field{display:flex;flex-direction:column;gap:4px;margin-top:10px;min-width:0}
+.field label{font-size:12px;font-weight:500;color:var(--muted)}
+.field input{border:1px solid var(--rule);border-radius:8px;background:var(--sheet);color:var(--ink);padding:9px 12px;font:inherit;font-size:16px;width:100%}
+.field input:focus{outline:2px solid var(--primary);border-color:transparent}
+.result{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
+.qr{background:#fff;padding:10px;border-radius:10px;flex:none;line-height:0}
+.qr img,.qr canvas{width:180px;height:180px}
+.linkbox{flex:1;min-width:0;font-family:var(--mono);font-size:12px;background:var(--grid);border-radius:8px;padding:10px;overflow-wrap:anywhere;max-height:7.5em;overflow:auto}
+textarea.code{width:100%;height:160px;font-family:var(--mono);font-size:12px;border:1px solid var(--rule);border-radius:8px;background:var(--grid);color:var(--ink);padding:10px;margin-top:10px}
+details{background:var(--sheet);border-radius:12px;box-shadow:var(--shadow);padding:14px 18px}
+details summary{cursor:pointer;font-weight:500}
+details p{margin:8px 0 0;color:var(--muted);max-width:65ch}
+h2.sec{font-size:16px;font-weight:500;margin:10px 4px 0;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icon-192.png" alt="">
+    <div>
+      <h1>Set up your Coursework Planner</h1>
+      <p class="lede">Your Canvas deadlines in one tidy app, with statuses, notes, a workload chart and reminder emails a week, three days and a day before each deadline.</p>
+    </div>
+  </header>
+
+  <div class="facts">
+    <div class="fact"><b>Free</b>Runs on your own free Google account.</div>
+    <div class="fact"><b>Private</b>Your coursework stays in your Google Drive. Nobody else can see it.</div>
+    <div class="fact"><b>About 5 minutes</b>Do it on a laptop. Your phone is only needed at the end.</div>
+  </div>
+
+  <p class="note">You'll create a small script in your Google account. It keeps your list in a Google Sheet, checks Canvas every morning and emails you reminders. Google shows a few warnings along the way because the script is yours rather than a published app. This guide tells you what to click at each one.</p>
+
+  <ol class="steps">
+    <li class="step">
+      <h2>Copy the script</h2>
+      <p>This copies the planner's script so you can paste it into your Google account in the next step.</p>
+      <div class="btns"><button class="btn primary" id="copyCode">Copy the script</button><button class="btn" id="showCode">Show it instead</button></div>
+      <div id="copyMsg" class="msg" hidden></div>
+      <textarea class="code" id="codeBox" readonly hidden aria-label="Script code"></textarea>
+    </li>
+
+    <li class="step">
+      <h2>Paste it into a new Apps Script project</h2>
+      <p class="where">IN APPS SCRIPT</p>
+      <ul>
+        <li>Open <a href="https://script.new" target="_blank" rel="noopener">script.new</a>. Sign in with Google if it asks.</li>
+        <li>Click in the code area, press <kbd>Ctrl</kbd>+<kbd>A</kbd> (<kbd>⌘</kbd>+<kbd>A</kbd> on Mac) to select what's there, then <kbd>Ctrl</kbd>+<kbd>V</kbd> (<kbd>⌘</kbd>+<kbd>V</kbd>) to paste.</li>
+        <li>Click <span class="ui">Untitled project</span> at the top and rename it <b>Coursework Planner</b>.</li>
+        <li>Click the <span class="ui">Save</span> icon (💾).</li>
+      </ul>
+    </li>
+
+    <li class="step">
+      <h2>Deploy it as a web app</h2>
+      <p class="where">IN APPS SCRIPT</p>
+      <ul>
+        <li>Click <span class="ui">Deploy</span> (top right), then <span class="ui">New deployment</span>.</li>
+        <li>Click the gear ⚙ next to <span class="ui">Select type</span> and choose <span class="ui">Web app</span>.</li>
+        <li>Leave <span class="ui">Execute as: Me</span>. Change <span class="ui">Who has access</span> to <b>Anyone</b>.</li>
+        <li>Click <span class="ui">Deploy</span>, then <span class="ui">Authorise access</span>, and pick your Google account.</li>
+        <li>Google says <i>"Google hasn't verified this app"</i>. Click <span class="ui">Advanced</span>, then <span class="ui">Go to Coursework Planner (unsafe)</span>, then <span class="ui">Allow</span>.</li>
+        <li>Copy the <span class="ui">Web app URL</span> it shows (it ends in <code>/exec</code>), then click <span class="ui">Done</span>.</li>
+      </ul>
+      <p class="warn">"Anyone" only means your phone can reach it without a Google sign-in. Every request needs your private access key from the next step, so nobody else can read or change your data.</p>
+    </li>
+
+    <li class="step">
+      <h2>Run setup</h2>
+      <p class="where">IN APPS SCRIPT</p>
+      <ul>
+        <li>In the toolbar, choose <b>setup</b> from the function dropdown (it may say <span class="ui">myFunction</span> or <span class="ui">doGet</span>), then click <span class="ui">Run</span>. If Google asks for permission again, click Allow.</li>
+        <li>The <span class="ui">Execution log</span> opens at the bottom. It shows <b>YOUR ACCESS KEY</b>, and usually a ready-made <b>phone link</b> too.</li>
+      </ul>
+      <p>This creates a Google Sheet called "Coursework Planner" in your Drive and schedules the morning check.</p>
+    </li>
+
+    <li class="step">
+      <h2>Get the app on your phone</h2>
+      <p>If the log showed a phone link, send it to yourself privately (for example in an email to yourself) and open it on your phone. Otherwise, paste your two details here to make the link and a QR code. This happens only on this page and nothing is sent anywhere.</p>
+      <div class="field"><label for="wUrl">Web app URL (from step 3)</label><input id="wUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div>
+      <div class="field"><label for="wKey">Access key (from step 4)</label><input id="wKey" placeholder="16 letters and numbers" autocomplete="off"></div>
+      <div class="btns"><button class="btn primary" id="makeLink">Make my link</button></div>
+      <div id="linkMsg" class="msg err" hidden></div>
+      <div class="result" id="result" hidden>
+        <div class="qr" id="qr" aria-label="QR code of your planner link"></div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0"><b>Scan this with your phone's camera</b>, or copy the link to open it elsewhere. Keep it private, because it unlocks your planner.</p>
+          <div class="linkbox" id="linkBox"></div>
+          <div class="btns" style="margin:0"><button class="btn" id="copyLink">Copy link</button><a class="btn" id="openHere" href="#">Open on this device</a></div>
+        </div>
+      </div>
+    </li>
+
+    <li class="step">
+      <h2>Add your Canvas calendar</h2>
+      <p class="where">IN THE PLANNER</p>
+      <p>The first time it opens, the planner asks for your Canvas calendar link:</p>
+      <ul>
+        <li>On a computer, open Canvas and click <span class="ui">Calendar</span> in the left-hand menu.</li>
+        <li>At the bottom of the right-hand column, click <span class="ui">Calendar Feed</span> and copy the link (it ends in <code>.ics</code>).</li>
+        <li>Paste it into the planner and tap <span class="ui">Load my assignments</span>.</li>
+      </ul>
+      <p>Then add the planner to your home screen. On iPhone (Safari): Share → <span class="ui">Add to Home Screen</span>. On Android (Chrome): ⋮ → <span class="ui">Install app</span>.</p>
+      <p>To check reminders work, tap <span class="ui">Sync</span> → <span class="ui">Send test reminder</span>.</p>
+    </li>
+  </ol>
+
+  <h2 class="sec">Questions</h2>
+  <details><summary>Who can see my assignments?</summary><p>Only you. They're stored in a Google Sheet in your own Drive, and your Canvas link is stored in your own script. The person who shared this app can't see any of it. The app's code is public, but it contains no one's data.</p></details>
+  <details><summary>Why does Google say the app is unsafe?</summary><p>Google shows that warning for any script that isn't published on its marketplace, including ones you make yourself. The script only edits its own Sheet, reads your Canvas calendar feed, and sends emails to you.</p></details>
+  <details><summary>When do reminders arrive?</summary><p>Around 7am UK time, 7, 3 and 1 days before each deadline and on the day, plus up to 3 days after if you miss one. Nothing is sent on days with nothing to report. Assignments you mark Submitted or Hidden don't get reminders.</p></details>
+  <details><summary>How do I use it on another device?</summary><p>Open the same phone link on that device, or come back to step 5 and make the link again.</p></details>
+  <details><summary>How do I stop it?</summary><p>Open your Coursework Planner project at script.google.com and delete it, or open Triggers (the alarm clock icon) and delete the dailyJob trigger. You can also delete the "Coursework Planner" sheet from your Drive.</p></details>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const APP=new URL("./",location.href).href;
+let code=null;
+async function getCode(){if(code)return code;const r=await fetch("Code.gs",{cache:"no-store"});if(!r.ok)throw new Error("fetch");code=await r.text();return code}
+$("copyCode").addEventListener("click",async()=>{
+  const m=$("copyMsg");m.hidden=false;m.className="msg";
+  try{const c=await getCode();await navigator.clipboard.writeText(c);m.textContent="Copied. Now go to step 2."}
+  catch(e){try{const c=await getCode();$("codeBox").value=c;$("codeBox").hidden=false;$("codeBox").select();m.textContent="Your browser blocked copying, so the script is shown below and selected. Press Ctrl+C (⌘+C on Mac) to copy it."}catch(e2){m.className="msg err";m.textContent="Couldn't load the script. Check your connection and reload the page."}}
+});
+$("showCode").addEventListener("click",async()=>{try{$("codeBox").value=await getCode();$("codeBox").hidden=false;$("codeBox").focus();$("codeBox").select()}catch(e){}});
+function b64url(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_")}
+$("makeLink").addEventListener("click",()=>{
+  const url=$("wUrl").value.trim(),key=$("wKey").value.trim(),msg=$("linkMsg");
+  if(!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url)){msg.hidden=false;msg.textContent="The web app URL should start with https://script.google.com/macros/s/ and end in /exec. Copy it again from Deploy → Manage deployments.";$("result").hidden=true;return}
+  if(!/^[A-Za-z0-9]{8,64}$/.test(key)){msg.hidden=false;msg.textContent="The access key is the 16 letters and numbers after YOUR ACCESS KEY in the execution log.";$("result").hidden=true;return}
+  msg.hidden=true;
+  const link=APP+"#connect="+b64url(url+"|"+key);
+  $("linkBox").textContent=link;$("openHere").href=link;$("qr").innerHTML="";
+  if(window.QRCode)new QRCode($("qr"),{text:link,width:360,height:360,correctLevel:QRCode.CorrectLevel.L});else $("qr").hidden=true;
+  $("result").hidden=false;
+});
+$("copyLink").addEventListener("click",async()=>{const t=$("linkBox").textContent;try{await navigator.clipboard.writeText(t);$("copyLink").textContent="Copied"}catch(e){const r=document.createRange();r.selectNodeContents($("linkBox"));const s=getSelection();s.removeAllRanges();s.addRange(r)}});
+})();
+</script>
+</body>
+</html>

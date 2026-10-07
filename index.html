@@ -258,7 +258,7 @@ img{max-width:100%}
   <header class="tb">
     <div class="tb-main">
       <h1>Coursework Planner</h1>
-      <p>Deadlines from your Swansea Canvas calendar, with your own progress on top.</p>
+      <p>Deadlines from your Canvas calendar, with your own progress on top.</p>
       <p class="sync" id="sync" hidden></p>
     </div>
     <div class="tb-cells">
@@ -305,12 +305,13 @@ img{max-width:100%}
       <div class="field"><label class="lbl" for="icsText">Or paste the file contents</label><textarea id="icsText" placeholder="BEGIN:VCALENDAR …"></textarea></div>
       <div class="actions"><button class="btn ghost" id="bRunImport">Import file</button></div>
     </details>
-    <div class="conn"><span>Connected to your Google Sheet</span><button class="btn ghost" id="bDisconnect">Change connection</button></div>
+    <div class="conn"><span>Connected to your Google Sheet</span><span class="actions"><button class="btn ghost" id="bTestMail" hidden>Send test reminder</button><button class="btn ghost" id="bFeed" hidden>Change Canvas link</button><button class="btn ghost" id="bDisconnect">Change connection</button></span></div>
   </section>
 
   <section class="panel setup" id="pSetup" hidden>
     <h2>Connect your planner</h2>
-    <p>Paste the two things from step 2 of the setup guide. You only need to do this once on each device.</p>
+    <p>New here? Follow the <a href="setup.html">5-minute setup guide</a> first. It ends with a link that connects this app for you.</p>
+    <p>Or paste your web app URL and access key below. You only need to do this once on each device.</p>
     <form id="setupForm" style="display:flex;flex-direction:column;gap:12px">
       <div class="field"><label class="lbl" for="sUrl">Web app URL</label><input id="sUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" required autocomplete="off"></div>
       <div class="field"><label class="lbl" for="sKey">Access key</label><input id="sKey" placeholder="From the Apps Script execution log" required autocomplete="off"></div>
@@ -328,6 +329,22 @@ img{max-width:100%}
       <div class="field"><label class="lbl" for="fDate">Due date</label><input id="fDate" type="date" required></div>
       <div class="field"><label class="lbl" for="fTime">Time</label><input id="fTime" type="time" value="14:00" required></div>
       <div class="actions"><button class="btn primary" type="submit">Add</button><button class="btn ghost" type="button" id="bCloseAdd">Cancel</button></div>
+    </form>
+  </section>
+
+  <section class="panel setup" id="pCanvas" hidden>
+    <h2>Add your Canvas calendar</h2>
+    <p>Your planner reads deadlines from your private Canvas calendar feed. You only need to do this once.</p>
+    <ol>
+      <li>On a computer, open Canvas and click <b>Calendar</b> in the left-hand menu.</li>
+      <li>At the bottom of the right-hand column, click <b>Calendar Feed</b>.</li>
+      <li>Copy the link it shows. It starts with <code>https://</code> and ends in <code>.ics</code>.</li>
+    </ol>
+    <form id="canvasForm" style="display:flex;flex-direction:column;gap:12px">
+      <div class="field"><label class="lbl" for="cFeed">Canvas calendar feed link</label><input id="cFeed" type="url" placeholder="https://canvas.swansea.ac.uk/feeds/calendars/user_….ics" required autocomplete="off"></div>
+      <div class="actions"><button class="btn primary" type="submit" id="bSaveFeed">Load my assignments</button><button class="btn ghost" type="button" id="bCancelFeed" hidden>Cancel</button></div>
+      <div id="canvasMsg" hidden></div>
+      <p class="legend" style="margin:0">The link is stored only in your own Google account. Anyone who has it can see your Canvas calendar, so keep it private.</p>
     </form>
   </section>
 
@@ -523,12 +540,14 @@ async function load(){
     if(inflight)return; // a save is on its way; don't overwrite it with older data
     items=new Map(j.items.map(i=>[i.id,i]));meta=j.meta||null;loaded=true;lastLoad=Date.now();
     $("notice").textContent="";cacheData();render();renderSync();
+    if(meta&&meta.hasFeed===false&&$("pCanvas").hidden)showCanvas(false);
   }catch(e){
     loaded=true;render();
     $("notice").textContent=e.message==="bad key"?"The access key doesn't match. Choose Sync → Change connection and paste it again.":"You're offline or Google couldn't be reached, so this is your last saved copy. Changes won't save until you're back online.";
   }
 }
 function renderSync(){
+  const v2=!!(meta&&meta.version>=2);$("bTestMail").hidden=!v2;$("bFeed").hidden=!v2;
   const el=$("sync");
   if(!meta||!meta.lastSync){el.hidden=true;return}
   const t=new Date(meta.lastSync), hrs=(Date.now()-t)/36e5;
@@ -613,6 +632,10 @@ document.addEventListener("click",e=>{
   else if(t.id==="bAdd")openPanel("pAdd");
   else if(t.id==="bCloseImport"||t.id==="bCloseAdd")closePanels();
   else if(t.id==="bSyncNow")syncNow();
+  else if(t.id==="bFeed"){closePanels();showCanvas(true)}
+  else if(t.id==="bCancelFeed"){$("pCanvas").hidden=true}
+  else if(t.id==="bTestMail"){const m=$("importMsg");m.hidden=false;m.className="msg";m.textContent="Sending…";
+    api("testEmail").then(()=>{m.textContent="Test reminder sent. Check your inbox in a minute."}).catch(()=>{m.className="msg err";m.textContent="Couldn't send the test email. Try again in a moment."})}
   else if(t.id==="bDisconnect"){try{localStorage.removeItem("cw-api")}catch(e){}CFG={url:"",key:""};closePanels();showSetup()}
   else if(t.id==="bRunImport"){
     const f=$("icsFile").files[0];
@@ -663,6 +686,25 @@ $("setupForm").addEventListener("submit",async e=>{
     msg.className="msg err";
     msg.textContent=err.message==="bad key"?"That access key doesn't match. Copy it again from the Apps Script execution log.":"Couldn't reach that web app URL. Check it ends in /exec and that the deployment's access is set to Anyone.";
   }
+});
+
+/* ---------- Canvas link (first run) ---------- */
+function showCanvas(cancelable){
+  $("pCanvas").hidden=false;$("bCancelFeed").hidden=!cancelable;$("canvasMsg").hidden=true;$("cFeed").value="";
+  if(!cancelable)$("view").innerHTML=`<div class="empty">Add your Canvas calendar link and your assignments will appear here.</div>`;
+  if(!mq.matches)$("pCanvas").scrollIntoView({block:"nearest"});
+}
+$("canvasForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const msg=$("canvasMsg"),btn=$("bSaveFeed");msg.hidden=false;msg.className="msg";msg.textContent="Checking your Canvas calendar…";btn.disabled=true;
+  try{
+    const j=await api("config",{feedUrl:$("cFeed").value.trim()});
+    msg.textContent=`Found ${j.count} assignment${j.count===1?"":"s"}.`;
+    setTimeout(()=>{$("pCanvas").hidden=true},900);await load();
+  }catch(err){
+    msg.className="msg err";
+    msg.textContent=err.message==="bad feed"?"That doesn't look like a Canvas calendar feed link. It should start with https:// and end in .ics.":err.message==="unreachable"?"Canvas didn't recognise that link. Copy it again from Calendar → Calendar Feed.":"Couldn't reach your Google Sheet. Check your connection and try again.";
+  }finally{btn.disabled=false}
 });
 
 /* ---------- boot ---------- */
