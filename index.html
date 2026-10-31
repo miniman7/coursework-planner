@@ -261,6 +261,17 @@ img{max-width:100%}
 .item.cheer{animation:cheer .6s ease 2}
 @keyframes cheer{0%,100%{transform:none}25%{transform:rotate(-1.5deg) scale(1.02)}75%{transform:rotate(1.5deg) scale(1.02)}}
 @media (prefers-reduced-motion:reduce){#party.on{animation:none}.item.cheer{animation:none}}
+/* Refresh */
+.tb-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.refresh{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--rule);background:var(--sheet);color:var(--primary);border-radius:999px;padding:7px 16px 7px 12px;font-weight:500;font-size:14px;flex:none}
+.refresh:hover{background:var(--primary-soft)}
+.refresh svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.refresh[aria-busy="true"]{opacity:.7;cursor:default}
+.refresh[aria-busy="true"] svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.refresh[aria-busy="true"] svg{animation:none}}
+@media (max-width:640px){.refresh span{display:none}.refresh{padding:9px}}
+
 /* Placement applications */
 .apps{background:var(--sheet);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .apps>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap;padding:14px 18px}
@@ -295,7 +306,7 @@ img{max-width:100%}
 <div class="wrap">
   <header class="tb">
     <div class="tb-main">
-      <h1>Coursework Planner</h1>
+      <div class="tb-top"><h1>Coursework Planner</h1><button class="refresh" id="bRefresh" hidden title="Check Canvas and reload your applications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg><span>Refresh</span></button></div>
       <p>Deadlines from your Canvas calendar, with your own progress on top.</p>
       <p class="sync" id="sync" hidden></p>
     </div>
@@ -502,6 +513,7 @@ function appInitials(name){
 }
 function appHue(a){if(typeof a.hue==="number")return a.hue;let h=0;for(const c of String(a.company))h=(h*31+c.charCodeAt(0))%360;return h}
 function renderApps(){
+  $("bRefresh").hidden=!connected();
   const box=$("apps"), list=$("appList"), sum=$("appsSum");
   box.hidden=!connected();if(box.hidden)return;
   $("appAdd").hidden=!appsOn;
@@ -531,7 +543,7 @@ async function saveApp(id,patch){
 async function importPendingApps(){
   if(!pendingApps||!appsOn)return;
   const list=pendingApps;pendingApps=null;
-  try{const j=await api("importApps",{apps:list});try{localStorage.removeItem("cw-pending-apps")}catch(e){}await load();snack(`Added ${j.added} application${j.added==1?"":"s"}`+(j.updated?`, updated ${j.updated}`:""),()=>{})}
+  try{const j=await api("importApps",{apps:list});try{localStorage.removeItem("cw-pending-apps")}catch(e){}await load();snack(`Added ${j.added} application${j.added==1?"":"s"}`+(j.updated?`, updated ${j.updated}`:""),null)}
   catch(e){pendingApps=list;$("notice").textContent="Couldn't add your applications yet. They'll be added next time the planner reaches your Google Sheet."}
 }
 
@@ -699,6 +711,16 @@ async function runImport(text){
   try{const j=await api("import",{items:evs});msg.textContent=j.summary||"Imported.";$("icsText").value="";$("icsFile").value="";await load()}
   catch(e){msg.className="msg err";msg.textContent="Couldn't import. Check your connection and try again."}
 }
+async function refreshAll(){
+  const b=$("bRefresh");if(b.getAttribute("aria-busy")==="true")return;
+  b.setAttribute("aria-busy","true");b.disabled=true;$("notice").textContent="";
+  try{
+    const j=await api("sync");await load();
+    const n=apps.size;
+    snack(j.error?"Couldn't reach Canvas, but your applications are up to date":`Up to date · Canvas: ${j.summary}`+(appsOn?` · ${n} application${n==1?"":"s"}`:""),null);
+  }catch(e){$("notice").textContent="Couldn't reach your Google Sheet. Check your connection and try again."}
+  finally{b.removeAttribute("aria-busy");b.disabled=false}
+}
 async function syncNow(){
   const msg=$("importMsg"),btn=$("bSyncNow");msg.hidden=false;msg.className="msg";msg.textContent="Checking Canvas…";btn.disabled=true;
   try{const j=await api("sync");msg.className=j.error?"msg err":"msg";msg.textContent=j.error?"Couldn't reach Canvas. Try again in a few minutes.":`Done: ${j.summary}.`;await load()}
@@ -728,6 +750,7 @@ document.addEventListener("click",e=>{
   else if(t.id==="bAdd")openPanel("pAdd");
   else if(t.id==="bCloseImport"||t.id==="bCloseAdd")closePanels();
   else if(t.id==="bSyncNow")syncNow();
+  else if(t.id==="bRefresh")refreshAll();
   else if(t.id==="bFeed"){closePanels();showCanvas(true)}
   else if(t.id==="bCancelFeed"){$("pCanvas").hidden=true}
   else if(t.id==="bTestMail"){const m=$("importMsg");m.hidden=false;m.className="msg";m.textContent="Sending…";
@@ -760,7 +783,8 @@ $("apps").addEventListener("toggle",()=>{try{localStorage.setItem("cw-apps-open"
 let snackTimer=null;
 function snack(text,undo){
   const el=$("snack");$("snackText").textContent=text;el.hidden=false;
-  $("snackUndo").onclick=()=>{undo();el.hidden=true;clearTimeout(snackTimer)};
+  $("snackUndo").hidden=!undo;
+  $("snackUndo").onclick=()=>{if(undo)undo();el.hidden=true;clearTimeout(snackTimer)};
   clearTimeout(snackTimer);snackTimer=setTimeout(()=>{el.hidden=true},7000);
 }
 document.addEventListener("change",e=>{
