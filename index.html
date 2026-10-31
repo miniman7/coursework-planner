@@ -23,7 +23,7 @@
   --accent:#1a73e8; --accent-soft:#e8f0fe;
   --late:#d93025; --late-soft:#fce8e6; --soon:#b06000; --soon-soft:#fef7e0; --ok:#188038; --ok-soft:#e6f4ea; --doing:#1967d2; --doing-soft:#e8f0fe;
   --on-ev:#ffffff; --snack-bg:#323232; --snack-fg:#f1f1f1; --snack-act:#8ab4f8; --m1:#039be5; --m2:#8e24aa; --m3:#e67c73; --m4:#33b679; --m5:#f4511e; --m6:#3f51b5;
-  --shadow:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15);
+  --shadow:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15); --logo-l:40%; --logo-fg:#ffffff;
   --display:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif; --body:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Roboto Mono",ui-monospace,monospace;
   --r:12px;
 }
@@ -33,14 +33,14 @@
   --accent:#8ab4f8; --accent-soft:#394457;
   --late:#f28b82; --late-soft:#4a2b2a; --soon:#fdd663; --soon-soft:#463d22; --ok:#81c995; --ok-soft:#24392b; --doing:#8ab4f8; --doing-soft:#394457;
   --on-ev:#202124; --snack-bg:#e8eaed; --snack-fg:#202124; --snack-act:#1a73e8; --m1:#4fc3f7; --m2:#ce93d8; --m3:#f6a29b; --m4:#6fd39e; --m5:#ff8a65; --m6:#8c9eff;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px 1px rgba(0,0,0,.25); color-scheme:dark}}
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px 1px rgba(0,0,0,.25); --logo-l:66%; --logo-fg:#202124; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#202124; --sheet:#2d2e31; --ink:#e8eaed; --muted:#9aa0a6; --rule:#3c4043; --grid:#35363a;
   --primary:#8ab4f8; --on-primary:#202124; --primary-soft:#394457; --primary-ink:#d2e3fc;
   --accent:#8ab4f8; --accent-soft:#394457;
   --late:#f28b82; --late-soft:#4a2b2a; --soon:#fdd663; --soon-soft:#463d22; --ok:#81c995; --ok-soft:#24392b; --doing:#8ab4f8; --doing-soft:#394457;
   --on-ev:#202124; --snack-bg:#e8eaed; --snack-fg:#202124; --snack-act:#1a73e8; --m1:#4fc3f7; --m2:#ce93d8; --m3:#f6a29b; --m4:#6fd39e; --m5:#ff8a65; --m6:#8c9eff;
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px 1px rgba(0,0,0,.25); color-scheme:dark}
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px 1px rgba(0,0,0,.25); --logo-l:66%; --logo-fg:#202124; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5;transition:background-color .2s,color .2s}
@@ -261,6 +261,31 @@ img{max-width:100%}
 .item.cheer{animation:cheer .6s ease 2}
 @keyframes cheer{0%,100%{transform:none}25%{transform:rotate(-1.5deg) scale(1.02)}75%{transform:rotate(1.5deg) scale(1.02)}}
 @media (prefers-reduced-motion:reduce){#party.on{animation:none}.item.cheer{animation:none}}
+/* Placement applications */
+.apps{background:var(--sheet);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.apps>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap;padding:14px 18px}
+.apps>summary::-webkit-details-marker{display:none}
+.apps>summary h2{font-size:16px;font-weight:500;margin:0;display:inline-flex;align-items:center;gap:10px}
+.apps>summary h2::after{content:"";width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+.apps[open]>summary h2::after{transform:rotate(45deg) translateY(-2px)}
+.app-list{display:flex;flex-direction:column}
+.app{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 18px;border-top:1px solid var(--rule)}
+.app.end{opacity:.6}
+.logo{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:.03em;color:var(--logo-fg);background:hsl(var(--h,210) 55% var(--logo-l));flex:none}
+.app-main{min-width:0;display:flex;flex-direction:column;gap:2px}
+.app-co{font-weight:500;font-size:15px}
+.app-role{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.app-next{font-size:13px;margin-top:4px;display:flex;gap:4px 10px;flex-wrap:wrap;align-items:center;color:var(--ink)}
+.status.act{color:var(--soon);background:var(--soon-soft);border-color:transparent}
+.status.wait{color:var(--doing);background:var(--doing-soft);border-color:transparent}
+.status.good{color:var(--ok);background:var(--ok-soft);border-color:transparent}
+.status.end{color:var(--muted);border-style:dashed}
+.app-add{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 18px;border-top:1px solid var(--rule)}
+.app-add input{border:1px solid var(--rule);border-radius:8px;background:var(--sheet);padding:7px 12px;min-width:0;flex:1 1 160px}
+.app-add input:focus{outline:2px solid var(--primary);border-color:transparent}
+.apps .empty{border:0;border-top:1px solid var(--rule);border-radius:0;padding:18px}
+.apps .empty a{color:var(--primary)}
+@media (max-width:560px){.app{grid-template-columns:40px minmax(0,1fr);gap:12px}.app .side{grid-column:2;align-items:flex-start}.app-add input{font-size:16px}}
 </style>
 </head>
 <body>
@@ -288,6 +313,16 @@ img{max-width:100%}
     <div class="load-head"><h2>Weekly load</h2><span class="legend"><b></b>Two or more deadlines that week — start early</span></div>
     <div class="weeks-scroll"><div class="weeks" id="weeks"></div></div>
   </section>
+
+  <details class="apps" id="apps" open>
+    <summary><h2>Placement applications</h2><span class="legend" id="appsSum"></span></summary>
+    <div class="app-list" id="appList"></div>
+    <form class="app-add" id="appAdd">
+      <input id="aCompany" aria-label="Company" placeholder="Company" required>
+      <input id="aRole" aria-label="Role" placeholder="Role">
+      <button class="btn ghost" type="submit">Add application</button>
+    </form>
+  </details>
 
   <div class="bar">
     <div class="seg view" role="group" aria-label="View">
@@ -380,6 +415,8 @@ const COLORS=["--m1","--m2","--m3","--m4","--m5","--m6"];
 const DAY=864e5;
 let items=new Map();      // id -> record
 let loaded=false, meta=null;
+let apps=new Map(), appsOn=false, pendingApps=null;
+try{pendingApps=JSON.parse(localStorage.getItem("cw-pending-apps")||"null")}catch(e){} // placement applications (needs Code.gs version 3)
 let CFG={url:"",key:""};try{Object.assign(CFG,JSON.parse(localStorage.getItem("cw-api")||"{}"))}catch(e){}
 const connected=()=>!!(CFG.url&&CFG.key);
 let ui={view:"list", hidden:[], month:null, open:{}};
@@ -422,7 +459,7 @@ function render(){
   $("kMonth").textContent=open.filter(i=>{const n=daysLeft(new Date(i.due));return n>=0&&n<=30}).length;
   $("kDoing").textContent=all.filter(i=>i.status==="doing").length;
   $("kDone").textContent=`${all.filter(i=>i.status==="done").length}/${all.length}`;
-  renderChips(); renderNext(); renderLoad();
+  renderChips(); renderNext(); renderLoad(); renderApps();
   $("vList").setAttribute("aria-pressed",ui.view==="list");$("vCal").setAttribute("aria-pressed",ui.view==="cal");syncChrome();
   if(!everything.length){$("view").innerHTML=`<div class="empty">${loaded?"No assignments yet. Choose <b>Update from Canvas</b> to import your calendar feed, or add one by hand.":"Loading your assignments…"}</div>`;return}
   ui.view==="cal"?renderCal():renderList();
@@ -454,6 +491,50 @@ function renderLoad(){
       <div class="wk-stack">${wk.items.map(i=>`<i style="--c:${colorOf(i.module)}" title="${esc(i.title)}"></i>`).join("")}</div>
       <div class="wk-lbl">${k===0?"Now":fmt(dt,{day:"numeric",month:"short",timeZone:"UTC"})}</div></div>`}).join("");
 }
+/* ---------- placement applications ---------- */
+const APP_ST={assessment:["Assessment to do","act"],interview:["Interview to do","act"],centre:["Assessment centre","act"],applied:["Applied","wait"],waiting:["Awaiting outcome","wait"],offer:["Offer","good"],rejected:["Unsuccessful","end"],closed:["Expired","end"]};
+const APP_RANK={assessment:0,interview:0,centre:0,offer:1,waiting:2,applied:2,rejected:3,closed:3};
+function appInitials(name){
+  const w=String(name||"?").trim().split(/\s+/);
+  if(/^[A-Z0-9&]{2,4}$/.test(w[0]))return w[0];
+  if(w[1]&&/^\d+$/.test(w[1]))return w[0][0].toUpperCase()+w[1];
+  return w[0][0].toUpperCase();
+}
+function appHue(a){if(typeof a.hue==="number")return a.hue;let h=0;for(const c of String(a.company))h=(h*31+c.charCodeAt(0))%360;return h}
+function renderApps(){
+  const box=$("apps"), list=$("appList"), sum=$("appsSum");
+  box.hidden=!connected();if(box.hidden)return;
+  $("appAdd").hidden=!appsOn;
+  if(!appsOn){sum.textContent="";list.innerHTML=loaded&&meta?`<div class="empty">To track applications here, copy the latest <a href="https://github.com/miniman7/coursework-planner/blob/main/Code.gs" target="_blank" rel="noopener">Code.gs</a> into your Apps Script and deploy a new version.</div>`:"";return}
+  const all=[...apps.values()].sort((a,b)=>(APP_RANK[a.status]??2)-(APP_RANK[b.status]??2)||(a.due?new Date(a.due):Infinity)-(b.due?new Date(b.due):Infinity)||String(a.company).localeCompare(b.company));
+  if(!all.length){sum.textContent="";list.innerHTML=`<div class="empty">No applications yet. Add one below.</div>`;return}
+  const n=k=>all.filter(a=>(APP_ST[a.status]||APP_ST.applied)[1]===k).length;
+  sum.textContent=[n("act")&&`${n("act")} to do`,n("wait")&&`${n("wait")} waiting`,n("good")&&`${n("good")} offer${n("good")==1?"":"s"}`,n("end")&&`${n("end")} closed`].filter(Boolean).join(" · ");
+  list.innerHTML=all.map(a=>{
+    const st=APP_ST[a.status]||APP_ST.applied, act=st[1]==="act";
+    const due=a.due?new Date(a.due):null, d=due?daysLeft(due):null;
+    const when=due&&act?`<span class="left ${leftClass(d)}">${d<0?leftLabel(d):fmt(due,{weekday:"short",day:"numeric",month:"short"})+(d<=1?" · "+leftLabel(d):"")}</span>`:"";
+    return `<article class="app ${st[1]}" style="--h:${appHue(a)}">
+      <div class="logo" aria-hidden="true">${esc(appInitials(a.company))}</div>
+      <div class="app-main"><div class="app-co">${esc(a.company)}</div>${a.role?`<div class="app-role">${esc(a.role)}</div>`:""}${a.next||when?`<div class="app-next">${when}<span>${esc(a.next||"")}</span></div>`:""}</div>
+      <div class="side"><label class="status ${st[1]}" title="Change status"><span>${st[0]}</span><select data-appstatus="${esc(a.id)}" aria-label="Status of ${esc(a.company)} application">${Object.entries(APP_ST).map(([k,v])=>`<option value="${k}"${(a.status||"applied")===k?" selected":""}>${v[0]}</option>`).join("")}</select></label></div>
+    </article>`}).join("");
+}
+async function saveApp(id,patch){
+  const cur=apps.get(id);if(!cur)return;
+  const next={...cur,...patch};apps.set(id,next);render();cacheData();
+  if(!connected())return;
+  inflight++;
+  try{await api("saveApp",{app:next})}catch(e){$("notice").textContent="Couldn't save that application. Check your connection and try again."}
+  finally{inflight--}
+}
+async function importPendingApps(){
+  if(!pendingApps||!appsOn)return;
+  const list=pendingApps;pendingApps=null;
+  try{const j=await api("importApps",{apps:list});try{localStorage.removeItem("cw-pending-apps")}catch(e){}await load();snack(`Added ${j.added} application${j.added==1?"":"s"}`+(j.updated?`, updated ${j.updated}`:""),()=>{})}
+  catch(e){pendingApps=list;$("notice").textContent="Couldn't add your applications yet. They'll be added next time the planner reaches your Google Sheet."}
+}
+
 function itemHtml(i){
   const due=new Date(i.due), n=daysLeft(due), done=i.status==="done", c=colorOf(i.module);
   const ss=suggestedStart(i), ssN=daysLeft(ss);
@@ -543,8 +624,8 @@ async function api(action,payload){
   if(!j.ok)throw new Error(j.error||"Request failed");
   return j;
 }
-function cacheData(){try{localStorage.setItem("cw-cache",JSON.stringify({items:[...items.values()],meta}))}catch(e){}}
-function readCache(){try{const c=JSON.parse(localStorage.getItem("cw-cache")||"null");if(c){items=new Map(c.items.map(i=>[i.id,i]));meta=c.meta;loaded=true}}catch(e){}}
+function cacheData(){try{localStorage.setItem("cw-cache",JSON.stringify({items:[...items.values()],apps:[...apps.values()],appsOn,meta}))}catch(e){}}
+function readCache(){try{const c=JSON.parse(localStorage.getItem("cw-cache")||"null");if(c){items=new Map(c.items.map(i=>[i.id,i]));apps=new Map((c.apps||[]).map(a=>[a.id,a]));appsOn=!!c.appsOn;meta=c.meta;loaded=true}}catch(e){}}
 let inflight=0, lastLoad=0;
 async function load(){
   if(!connected())return;
@@ -552,7 +633,9 @@ async function load(){
     const j=await api("list");
     if(inflight)return; // a save is on its way; don't overwrite it with older data
     items=new Map(j.items.map(i=>[i.id,i]));meta=j.meta||null;loaded=true;lastLoad=Date.now();
+    appsOn=Array.isArray(j.apps);apps=new Map((j.apps||[]).map(a=>[a.id,a]));
     $("notice").textContent="";cacheData();render();renderSync();
+    if(pendingApps)importPendingApps();
     if(meta&&meta.hasFeed===false&&$("pCanvas").hidden)showCanvas(false);
   }catch(e){
     loaded=true;render();
@@ -666,6 +749,14 @@ $("addForm").addEventListener("submit",e=>{e.preventDefault();
   save(id,{});e.target.reset();$("fTime").value="14:00";closePanels();
 });
 $("scrim").addEventListener("click",closePanels);
+$("appAdd").addEventListener("submit",e=>{e.preventDefault();
+  const company=$("aCompany").value.trim();if(!company)return;
+  const id=company.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+Date.now().toString(36);
+  apps.set(id,{id,company,role:$("aRole").value.trim(),status:"applied",next:"",due:null,hue:null});
+  e.target.reset();saveApp(id,{});
+});
+try{if(localStorage.getItem("cw-apps-open")==="0")$("apps").open=false}catch(e){}
+$("apps").addEventListener("toggle",()=>{try{localStorage.setItem("cw-apps-open",$("apps").open?"1":"0")}catch(e){}});
 let snackTimer=null;
 function snack(text,undo){
   const el=$("snack");$("snackText").textContent=text;el.hidden=false;
@@ -673,6 +764,9 @@ function snack(text,undo){
   clearTimeout(snackTimer);snackTimer=setTimeout(()=>{el.hidden=true},7000);
 }
 document.addEventListener("change",e=>{
+  const aid=e.target.dataset&&e.target.dataset.appstatus;
+  if(aid){const a=apps.get(aid);if(!a)return;const prev=a.status||"applied",nx=e.target.value;if(prev===nx)return;
+    saveApp(aid,{status:nx});snack(`${a.company}: ${APP_ST[nx][0]}`,()=>saveApp(aid,{status:prev}));return}
   const id=e.target.dataset&&e.target.dataset.status;if(!id)return;
   const it=items.get(id);if(!it)return;
   const prev=it.status||"todo", next=e.target.value;if(prev===next)return;
@@ -762,6 +856,14 @@ $("canvasForm").addEventListener("submit",async e=>{
   const m=location.hash.match(/^#connect=([A-Za-z0-9_\-+/=]+)/);if(!m)return;
   try{const [url,key]=atob(m[1].replace(/-/g,"+").replace(/_/g,"/")).split("|");
     if(/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url)&&key){CFG={url,key};try{localStorage.setItem("cw-api",JSON.stringify(CFG))}catch(e){}}
+  }catch(e){}
+  history.replaceState(null,"",location.pathname+location.search);
+})();
+// One-tap applications link: …/#apps=<base64url of a JSON list>. Added to your sheet once you're connected.
+(function(){
+  const m=location.hash.match(/^#apps=([A-Za-z0-9_\-]+)/);if(!m)return;
+  try{const bin=atob(m[1].replace(/-/g,"+").replace(/_/g,"/"));const list=JSON.parse(new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
+    if(Array.isArray(list)){pendingApps=list.slice(0,200);try{localStorage.setItem("cw-pending-apps",JSON.stringify(pendingApps))}catch(e){}}
   }catch(e){}
   history.replaceState(null,"",location.pathname+location.search);
 })();

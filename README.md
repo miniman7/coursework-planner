@@ -1,6 +1,6 @@
 # Coursework Planner
 
-A personal planner for Canvas assignment deadlines that you can install on your phone. It shows statuses, notes, a calendar and a weekly workload chart, and emails you reminders 7, 3 and 1 days before each deadline.
+A personal planner for Canvas assignment deadlines that you can install on your phone. It shows statuses, notes, a calendar and a weekly workload chart, and emails you reminders 7, 3 and 1 days before each deadline. It also has a section for tracking placement applications and where each one is up to.
 
 **Want your own? Follow the setup guide: https://miniman7.github.io/coursework-planner/setup.html**
 

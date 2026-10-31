@@ -17,6 +17,8 @@ const DAILY_HOUR = 7;               // Hour (UK time) for the morning check and 
 
 const TZ = 'Europe/London';
 const COLS = ['id', 'title', 'module', 'due', 'url', 'status', 'notes', 'custom'];
+const APP_COLS = ['id', 'company', 'role', 'status', 'next', 'due', 'hue'];
+const APP_STATUSES = ['applied', 'assessment', 'interview', 'centre', 'waiting', 'offer', 'rejected', 'closed'];
 
 /* ---------- one-time setup ---------- */
 function setup() {
@@ -62,7 +64,7 @@ function feedUrl_() { return PropertiesService.getScriptProperties().getProperty
 function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.key !== PropertiesService.getScriptProperties().getProperty('KEY')) return json_({ ok: false, error: 'bad key' });
-  if (p.action === 'list') return json_({ ok: true, items: readAll_(), meta: Object.assign(readMeta_(), { hasFeed: !!feedUrl_(), version: 2 }) });
+  if (p.action === 'list') return json_({ ok: true, items: readAll_(), apps: readApps_(), meta: Object.assign(readMeta_(), { hasFeed: !!feedUrl_(), version: 3 }) });
   return json_({ ok: false, error: 'unknown action' });
 }
 
@@ -84,6 +86,27 @@ function doPost(e) {
     if (body.action === 'delete') {
       writeAll_(readAll_().filter(x => x.id !== body.id));
       return json_({ ok: true });
+    }
+    if (body.action === 'saveApp') {
+      const a = cleanApp_(body.app);
+      if (!a.id || !a.company) return json_({ ok: false, error: 'missing id' });
+      const apps = readApps_(); const i = apps.findIndex(x => x.id === a.id);
+      if (i >= 0) apps[i] = a; else apps.push(a);
+      writeApps_(apps);
+      return json_({ ok: true });
+    }
+    if (body.action === 'deleteApp') {
+      writeApps_(readApps_().filter(x => x.id !== body.id));
+      return json_({ ok: true });
+    }
+    if (body.action === 'importApps') {
+      const apps = readApps_(); let added = 0, updated = 0;
+      (body.apps || []).slice(0, 200).map(cleanApp_).filter(a => a.id && a.company).forEach(a => {
+        const i = apps.findIndex(x => x.id === a.id);
+        if (i >= 0) { apps[i] = a; updated++; } else { apps.push(a); added++; }
+      });
+      writeApps_(apps);
+      return json_({ ok: true, added: added, updated: updated });
     }
     if (body.action === 'import') {
       const res = merge_((body.items || []).map(clean_));
@@ -287,6 +310,32 @@ function writeAll_(list) {
   if (list.length) sh.getRange(2, 1, list.length, COLS.length).setNumberFormat('@')
     .setValues(list.map(x => [x.id, x.title, x.module, x.due, x.url || '', x.status || 'todo', x.notes || '', x.custom ? 'true' : 'false']));
 }
+/** Placement applications live on their own tab, created the first time it's needed. */
+function appsSheet_() {
+  let sh = sheet_('Applications');
+  if (sh) return sh;
+  const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  const ss = id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActiveSpreadsheet();
+  sh = ss.insertSheet('Applications');
+  sh.getRange(1, 1, 1, APP_COLS.length).setValues([APP_COLS]).setFontWeight('bold');
+  sh.getRange('A:G').setNumberFormat('@');
+  sh.setFrozenRows(1);
+  return sh;
+}
+function readApps_() {
+  const sh = appsSheet_(); const n = sh.getLastRow() - 1;
+  if (n < 1) return [];
+  return sh.getRange(2, 1, n, APP_COLS.length).getDisplayValues().filter(r => r[0]).map(r => ({
+    id: r[0], company: r[1], role: r[2], status: r[3] || 'applied', next: r[4], due: r[5] || null, hue: r[6] === '' ? null : Number(r[6])
+  }));
+}
+function writeApps_(list) {
+  const sh = appsSheet_();
+  const old = sh.getLastRow() - 1;
+  if (old > 0) sh.getRange(2, 1, old, APP_COLS.length).clearContent();
+  if (list.length) sh.getRange(2, 1, list.length, APP_COLS.length).setNumberFormat('@')
+    .setValues(list.map(a => [a.id, a.company, a.role || '', a.status || 'applied', a.next || '', a.due || '', a.hue === null || a.hue === undefined ? '' : String(a.hue)]));
+}
 function readMeta_() {
   const v = sheet_('Meta').getRange('A1:B2').getDisplayValues();
   return { lastSync: v[0][1] || null, summary: v[1][1] || '' };
@@ -303,6 +352,16 @@ function clean_(it) {
     id: String(it.id || '').slice(0, 80), title: String(it.title || '').slice(0, 300), module: String(it.module || 'Other').slice(0, 40),
     due: String(it.due || ''), url: String(it.url || '').slice(0, 500), status: ok.indexOf(it.status) >= 0 ? it.status : 'todo',
     notes: String(it.notes || '').slice(0, 5000), custom: !!it.custom
+  };
+}
+function cleanApp_(a) {
+  a = a || {};
+  const hue = Number(a.hue);
+  return {
+    id: String(a.id || '').slice(0, 80), company: String(a.company || '').slice(0, 120), role: String(a.role || '').slice(0, 200),
+    status: APP_STATUSES.indexOf(a.status) >= 0 ? a.status : 'applied', next: String(a.next || '').slice(0, 500),
+    due: a.due && !isNaN(new Date(a.due)) ? new Date(a.due).toISOString() : null,
+    hue: a.hue === null || a.hue === undefined || a.hue === '' || isNaN(hue) ? null : Math.round(hue) % 360
   };
 }
 function ukDay_(d) {
