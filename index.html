@@ -296,6 +296,40 @@ img{max-width:100%}
 .app-add input:focus{outline:2px solid var(--primary);border-color:transparent}
 .apps .empty{border:0;border-top:1px solid var(--rule);border-radius:0;padding:18px}
 .apps .empty a{color:var(--primary)}
+/* Offer outlook chart */
+.odds{border-top:1px solid var(--rule);padding:16px 18px 14px;display:flex;flex-direction:column;gap:14px}
+.odds-head{display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
+.odds-head h3{margin:0;font-size:15px;font-weight:500}
+.odds-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.odds-stat{background:var(--paper);border-radius:10px;padding:10px 12px;min-width:0}
+.odds-stat .val{font-size:22px}
+.odds-stat .sub{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.odds-stat.top{background:var(--primary-soft);color:var(--primary-ink)}
+.odds-stat.top .lbl,.odds-stat.top .sub{color:var(--primary-ink);opacity:.85}
+.odds-chart{display:flex;flex-direction:column;gap:2px}
+.orow{display:grid;grid-template-columns:minmax(0,120px) minmax(0,1fr) auto;gap:12px;align-items:center;padding:6px 0;border-radius:8px}
+.orow:hover{background:var(--grid)}
+.oname{font-size:13.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:4px}
+.oname small{display:block;font-weight:400;font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.oname small.warn{color:var(--late)}
+.otrack{position:relative;height:22px;background-image:linear-gradient(to right,var(--rule) 1px,transparent 1px);background-size:var(--tick) 100%;background-repeat:repeat-x;border-left:1px solid var(--muted)}
+.obar{position:absolute;left:0;top:4px;bottom:4px;width:var(--w);min-width:2px;background:var(--primary);opacity:.45;border-radius:0 4px 4px 0;transition:width .3s}
+.orow.lead .obar{opacity:1}
+.oval{position:absolute;top:50%;transform:translateY(-50%);left:calc(var(--w) + 8px);font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.oround{display:inline-flex;align-items:center;border:1px solid var(--rule);border-radius:999px;font-size:12px;color:var(--muted);background:var(--sheet)}
+.oround button{border:0;background:none;width:26px;height:26px;border-radius:50%;color:var(--primary);font-size:16px;line-height:1}
+.oround button:hover{background:var(--primary-soft)}
+.oround button:disabled{opacity:.3;cursor:default;background:none}
+.oround span{min-width:58px;text-align:center;font-variant-numeric:tabular-nums}
+.oaxis{display:grid;grid-template-columns:minmax(0,120px) minmax(0,1fr) auto;gap:12px}
+.oaxis .ticks{position:relative;height:16px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.oaxis .ticks span{position:absolute;transform:translateX(-50%)}
+.oaxis .ticks span:first-child{transform:none}
+.oaxis .pad{visibility:hidden}
+.odds-note{font-size:12.5px;color:var(--muted);margin:0}
+.odds-note summary{cursor:pointer;color:var(--primary);font-weight:500;width:max-content}
+.odds-note p{margin:6px 0 0;max-width:68ch}
+@media (max-width:560px){.odds-stats{grid-template-columns:1fr 1fr}.odds-stat.top{grid-column:1/-1}.orow,.oaxis{grid-template-columns:minmax(0,108px) minmax(0,1fr)}.oround,.oaxis .pad{grid-column:2;justify-self:start}.oaxis .pad{display:none}}
 @media (max-width:560px){.app{grid-template-columns:40px minmax(0,1fr);gap:12px}.app .side{grid-column:2;align-items:flex-start}.app-add input{font-size:16px}}
 </style>
 </head>
@@ -328,6 +362,15 @@ img{max-width:100%}
   <details class="apps" id="apps" open>
     <summary><h2>Placement applications</h2><span class="legend" id="appsSum"></span></summary>
     <div class="app-list" id="appList"></div>
+    <section class="odds" id="odds" aria-labelledby="oddsH" hidden>
+      <div class="odds-head"><h3 id="oddsH">Offer outlook</h3><span class="legend">Rough guide, based on how far each application has got</span></div>
+      <div class="odds-stats" id="oddsStats"></div>
+      <div class="odds-chart" id="oddsChart" role="list"></div>
+      <div class="oaxis" aria-hidden="true"><span></span><div class="ticks" id="oddsTicks"></div><span class="oround pad"><button>−</button><span>0 rounds</span><button>+</button></span></div>
+      <details class="odds-note"><summary>How this is worked out</summary>
+        <p>Each stage starts from a typical success rate for UK engineering placement schemes, which shortlist hard: about 8% at application, 10% when an online assessment is next, 15% while awaiting an outcome, 22% at video interview, 40% at assessment centre. Every round you've already cleared multiplies that by 1.3, because each one removes a big share of the field. Use the − and + buttons to record rounds cleared, and change the status in the list above as things move. The overall figure is the chance that at least one comes through. These are estimates to help you prioritise, not real odds.</p>
+      </details>
+    </section>
     <form class="app-add" id="appAdd">
       <input id="aCompany" aria-label="Company" placeholder="Company" required>
       <input id="aRole" aria-label="Role" placeholder="Role">
@@ -470,7 +513,7 @@ function render(){
   $("kMonth").textContent=open.filter(i=>{const n=daysLeft(new Date(i.due));return n>=0&&n<=30}).length;
   $("kDoing").textContent=all.filter(i=>i.status==="doing").length;
   $("kDone").textContent=`${all.filter(i=>i.status==="done").length}/${all.length}`;
-  renderChips(); renderNext(); renderLoad(); renderApps();
+  renderChips(); renderNext(); renderLoad(); renderApps(); renderOdds();
   $("vList").setAttribute("aria-pressed",ui.view==="list");$("vCal").setAttribute("aria-pressed",ui.view==="cal");syncChrome();
   if(!everything.length){$("view").innerHTML=`<div class="empty">${loaded?"No assignments yet. Choose <b>Update from Canvas</b> to import your calendar feed, or add one by hand.":"Loading your assignments…"}</div>`;return}
   ui.view==="cal"?renderCal():renderList();
@@ -546,6 +589,48 @@ async function importPendingApps(){
   try{const j=await api("importApps",{apps:list});try{localStorage.removeItem("cw-pending-apps")}catch(e){}await load();snack(`Added ${j.added} application${j.added==1?"":"s"}`+(j.updated?`, updated ${j.updated}`:""),null)}
   catch(e){pendingApps=list;$("notice").textContent="Couldn't add your applications yet. They'll be added next time the planner reaches your Google Sheet."}
 }
+
+/* ---------- offer outlook ---------- */
+const ODDS_BASE={applied:8,assessment:10,waiting:15,interview:22,centre:40,offer:100};
+let localRounds={};try{localRounds=JSON.parse(localStorage.getItem("cw-rounds")||"{}")||{}}catch(e){}
+function roundsOf(a){return typeof a.rounds==="number"&&!isNaN(a.rounds)&&(a.rounds>0||!(a.id in localRounds))?a.rounds:(localRounds[a.id]||0)}
+function appOdds(a){const b=ODDS_BASE[a.status||"applied"];if(b==null)return 0;if(b>=100)return 100;return Math.min(85,b*Math.pow(1.3,roundsOf(a)))}
+function renderOdds(){
+  const box=$("odds");
+  const all=[...apps.values()];
+  const live=all.filter(a=>appOdds(a)>0).map(a=>({a,p:appOdds(a)})).sort((x,y)=>y.p-x.p||String(x.a.company).localeCompare(y.a.company));
+  if(!connected()||!appsOn||!live.length){box.hidden=true;return}
+  box.hidden=false;
+  const top=live[0], tied=live.filter(r=>Math.round(r.p)===Math.round(top.p));
+  const anyOffer=1-live.reduce((q,r)=>q*(1-r.p/100),1);
+  const out=all.length-live.length;
+  $("oddsStats").innerHTML=`
+    <div class="odds-stat top"><div class="lbl">${top.p>=100?"You have an offer":"Most likely right now"}</div><div class="val">${esc(tied.map(r=>r.a.company).join(" / "))}</div><div class="sub">${top.p>=100?"Offer received":`About ${Math.round(top.p)}% · ${esc((APP_ST[top.a.status]||APP_ST.applied)[0].toLowerCase())}`}</div></div>
+    <div class="odds-stat"><div class="lbl">Chance of at least one offer</div><div class="val">${Math.round(anyOffer*100)}%</div><div class="sub">Across ${live.length} live application${live.length==1?"":"s"}</div></div>
+    <div class="odds-stat"><div class="lbl">Still in the running</div><div class="val">${live.length}</div><div class="sub">${out?`${out} closed or unsuccessful`:"None closed yet"}</div></div>`;
+  const max=Math.max(40,Math.ceil(top.p/10)*10), step=max>50?20:10;
+  const pct=v=>v/max*100;
+  $("oddsChart").style.setProperty("--tick",pct(step)+"%");
+  $("oddsChart").innerHTML=live.map((r,i)=>{
+    const a=r.a, st=APP_ST[a.status]||APP_ST.applied, rounds=roundsOf(a);
+    const due=a.due?new Date(a.due):null, overdue=st[1]==="act"&&due&&daysLeft(due)<0;
+    const lead=Math.round(r.p)===Math.round(top.p);
+    return `<div class="orow${lead?" lead":""}" role="listitem" title="${esc(a.company)}: about ${Math.round(r.p)}% (${esc(st[0])}, ${rounds} round${rounds==1?"":"s"} cleared)">
+      <div class="oname">${esc(a.company)}<small class="${overdue?"warn":""}">${overdue?"Deadline passed, update status":esc(st[0])}</small></div>
+      <div class="otrack" style="--tick:${pct(step)}%"><div class="obar" style="--w:${pct(r.p)}%"></div><span class="oval" style="--w:${pct(r.p)}%">${Math.round(r.p)}%</span></div>
+      <span class="oround" aria-label="Rounds cleared for ${esc(a.company)}"><button type="button" data-rounds="${esc(a.id)}" data-d="-1" aria-label="One fewer round cleared"${rounds<=0||r.p>=100?" disabled":""}>−</button><span>${rounds} round${rounds==1?"":"s"}</span><button type="button" data-rounds="${esc(a.id)}" data-d="1" aria-label="One more round cleared"${rounds>=6||r.p>=100?" disabled":""}>+</button></span>
+    </div>`}).join("");
+  let t="";for(let v=0;v<=max;v+=step)t+=`<span style="left:${pct(v)}%">${v}%</span>`;
+  $("oddsTicks").innerHTML=t;
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("[data-rounds]");if(!b||b.disabled)return;
+  const a=apps.get(b.dataset.rounds);if(!a)return;
+  const prev=roundsOf(a), next=Math.max(0,Math.min(6,prev+Number(b.dataset.d)));
+  if(next===prev)return;
+  localRounds[a.id]=next;try{localStorage.setItem("cw-rounds",JSON.stringify(localRounds))}catch(e){}
+  saveApp(a.id,{rounds:next});
+});
 
 function itemHtml(i){
   const due=new Date(i.due), n=daysLeft(due), done=i.status==="done", c=colorOf(i.module);
